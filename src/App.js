@@ -13,12 +13,13 @@ const WebcamFeed = () => {
   let webcamRunning = false; // 웹캠 실행 여부를 나타내는 변수
   let lastVideoTime = -1; // 마지막 비디오 프레임의 시간을 저장하는 변수
 
-
+  const [countdown, setCountdown] = useState(3);
   const [count, setCount] = useState(0);
   const [isCounting, setIsCounting] = useState(false);
 
   useEffect(() => {
     let intervalId;
+    let countdownInterval;
 
     // 버튼을 누를 때만 카운트가 자동으로 증가하도록 설정
     if (isCounting && count < 5) {
@@ -27,9 +28,26 @@ const WebcamFeed = () => {
       }, 1000);
     }
 
+    if (count === 5) {
+
+      if (countdown !== 0) {
+        countdownInterval = setInterval(() => {
+          setCountdown((prevCountdown) => {
+            // countdown이 0이면 clearInterval로 interval 정리하고 countdown 중지
+            if (prevCountdown === 1) {
+              clearInterval(countdownInterval);
+              setIsCounting(false); // countdown 중지
+            }
+            return prevCountdown - 1;
+          });
+        }, 1000);
+      }
+    }
+
     // 컴포넌트가 언마운트되면 clearInterval로 인터벌 정리
     return () => clearInterval(intervalId);
   }, [isCounting, count]);
+
 
   const toggleCounting = () => {
     // 버튼 클릭 시 isCounting 상태를 토글
@@ -162,6 +180,7 @@ const WebcamFeed = () => {
         웹 캠 켜기
       </button>
       <h2>{count}</h2>
+      <h1>{countdown}</h1>
       <button id="countButton" onClick={toggleCounting}>
         {isCounting ? '카운트 중지' : '카운팅 시작'}
       </button>
