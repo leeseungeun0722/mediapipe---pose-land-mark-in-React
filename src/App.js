@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   PoseLandmarker,
   FilesetResolver,
@@ -69,15 +69,10 @@ const WebcamFeed = () => {
           canvasElementRef.current.width = videoWidth;
           canvasElementRef.current.height = videoHeight;
 
+          // 좌표 추출
           const pose = result.landmarks;
           console.log(pose);
 
-          // 새로운 부분: 좌표값을 터미널에 출력
-          // for (const landmark of result.landmarks) {
-          //   console.log(`Landmark: (${landmark.x}, ${landmark.y}, ${landmark.z})`);
-          // }
-
-          // 캔버스에 랜드마크 및 커넥터 그리기
           canvasCtx.save();
           canvasCtx.clearRect(0, 0, videoWidth, videoHeight);
           for (const landmark of result.landmarks) {
@@ -126,7 +121,36 @@ const WebcamFeed = () => {
     createPoseLandmarker();
   }, []); // 빈 배열은 컴포넌트 마운트 시에만 실행
 
-  return (
+
+
+  const [count, setCount] = useState(0);
+  const [isCounting, setIsCounting] = useState(false);
+
+  useEffect(() => {
+    let intervalId;
+
+    // 버튼을 누를 때만 카운트가 자동으로 증가하도록 설정
+    if (isCounting && count < 5) {
+      intervalId = setInterval(() => {
+        setCount((prevCount) => prevCount + 1);
+      }, 1000);
+    }
+
+    // 컴포넌트가 언마운트되면 clearInterval로 인터벌 정리
+    return () => clearInterval(intervalId);
+  }, [isCounting, count]);
+
+  const toggleCounting = () => {
+    // 버튼 클릭 시 isCounting 상태를 토글
+    setIsCounting((prevIsCounting) => !prevIsCounting);
+
+    // isCounting이 false이면 count를 0으로 초기화
+    if (!isCounting) {
+      setCount(0);
+    }
+  };
+
+return (
     <div style={{ position: 'relative' }}>
       <video id="webcam" ref={videoRef} autoPlay controls></video>
       <canvas
@@ -134,8 +158,13 @@ const WebcamFeed = () => {
         ref={canvasElementRef}
         style={{ position: 'absolute', top: 0, left: 0 }}
       ></canvas>
+
       <button id="webcamButton" onClick={enableCam}>
-        예측 활성화
+        웹 캠 켜기
+      </button>
+      <h2>{count}</h2>
+      <button id="countButton" onClick={toggleCounting}>
+        {isCounting ? '카운트 중지' : '카운팅 시작'}
       </button>
     </div>
   );
